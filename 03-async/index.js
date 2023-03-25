@@ -1,53 +1,107 @@
-const express = require('express')
-const bodyParser = require('body-parser')
+// Import required modules
+const express = require("express");
+const bodyParser = require("body-parser");
 
-const PORT = 3000
+// Set the port to 3000
+const PORT = 3000;
 
-const app = express()
+// Create an Express app instance
+const app = express();
 
-const {obj} = require("../02-http/data")
-const endPoint = '/api/v2/users'
+// Import data and define API endpoint
+const { obj } = require("../02-http/data");
+const endPoint = "/api/v2/users";
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
+// Use middleware to parse JSON and URL-encoded data
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
+// Define middleware functions to handle errors
+const errorLogger = (err, req, res, next) => {
+  next(err);
+};
 
-const errorLogger = (err, req, res, next)=> {
-next(err)
-}
+const errorHandler = (err, req, res, next) => {
+  console.log(err);
+  res.status(400);
+  res.json(err);
+};
 
-const errorHandler = (err, req, res, next)=> {
-console.log(err)
-// res.status(400)
-res.json(err)
-}
+// Define a function to verify if an ID exists in the data
+const verifyId = (id) => {
+  return obj.find((e) => e.id === parseInt(id));
+};
 
-app.get('/',(req,res)=> {
-res.send(obj)
-})
+// Define the routes for the API
+// GET requests for the root and user data
+app.get("/", (req, res) => {
+  res.send(obj);
+});
 
-app.get(endPoint,(req, res)=> {
-res.json(obj)
-})
+app.get(endPoint, (req, res) => {
+  res.json(obj);
+});
 
-app.get(`${endPoint}/:id`, (req, res)=> {
-const {id} = req.params
-const result = obj.find(e => e.id === parseInt(id))
-if(!result){
-throw new Error('User nor found')
-}
-res.json(result)
-})
+// GET request for a specific user
+app.get(`${endPoint}/:id`, (req, res) => {
+  const { id } = req.params;
+  const result = verifyId(id);
 
-app.post(endPoint, (req, res)=> {
-let data = req.body;
-obj.push(data)
-res.json(obj)
-} )
+  if (!result) {
+    throw new Error("User not found");
+  }
+  res.json(result);
+});
 
-app.use(errorHandler)
-app.use(errorLogger)
+// POST request to add a new user
+app.post(endPoint, (req, res) => {
+  let data = req.body;
+  obj.push(data);
+  res.json(obj);
+});
 
-app.listen(PORT, ()=> {
-console.log('escuchando en http://localhost')
-})
+// PUT request to update a specific user
+app.put(`${endPoint}/:id`, (req, res) => {
+  const { id } = req.params;
+  const result = verifyId(id);
+  const keys = Object.keys(req.body);
+  if (!result) {
+    throw new Error("User not found");
+  }
+  const newObj = obj.map((prop) => {
+    if (result.id === prop.id) {
+      keys.forEach((key) => {
+        if (result[key]) {
+          prop[key] = req.body[key];
+        }
+      });
+      return prop;
+    }
+    return {
+      ...prop,
+    };
+  });
+  console.log(newObj);
+  res.json(newObj);
+});
+
+// DELETE request to remove a specific user
+app.delete(`${endPoint}/:id`, (req, res) => {
+  const { id } = req.params;
+  const result = verifyId(id);
+  if (!result) {
+    throw new Error("User not found");
+  }
+  const index = obj.findIndex((e) => e.id === result.id);
+  obj.splice(index, 1);
+  res.send(obj);
+});
+
+// Use error-handling middleware functions
+app.use(errorHandler);
+app.use(errorLogger);
+
+// Start the server
+app.listen(PORT, () => {
+  console.log("Listening at http://localhost");
+});
