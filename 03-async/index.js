@@ -11,6 +11,7 @@ const endPoint = '/api/v2/users'
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
+
 const errorLogger = (err, req, res, next)=> {
 next(err)
 }
