@@ -12,7 +12,6 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: false }))
 
 const errorLogger = (err, req, res, next)=> {
-console.log('halkllo')
 next(err)
 }
 
@@ -34,7 +33,7 @@ app.get(`${endPoint}/:id`, (req, res)=> {
 const {id} = req.params
 const result = obj.find(e => e.id === parseInt(id))
 if(!result){
-throw new Error('Holiiiiiii')
+throw new Error('User nor found')
 }
 res.json(result)
 })
